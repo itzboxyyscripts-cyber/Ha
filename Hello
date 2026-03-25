@@ -1,0 +1,125 @@
+--[[
+    Auto Green - Basketball Legends
+    Rayfield UI
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local cloneref = cloneref or function(v) return v end
+local player = Players.LocalPlayer
+local Char = player.Character or player.CharacterAdded:Wait()
+
+local visualGui = player.PlayerGui:WaitForChild("Visual")
+local shootingElement = visualGui:WaitForChild("Shooting")
+local Shoot = ReplicatedStorage.Packages.Knit.Services.ControlService.RE.Shoot
+
+local autoShootEnabled = false
+local shootPower = 0.8
+local visibleConn = nil
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "itzboxyy scripts",
+    LoadingTitle = "itzboxyy scripts",
+    LoadingSubtitle = "Basketball Legends",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "AutoGreen",
+        FileName = "Config"
+    },
+    KeySystem = false,
+})
+
+local MainTab = Window:CreateTab("Auto Green", "target")
+
+MainTab:CreateToggle({
+    Name = "Auto Green",
+    CurrentValue = false,
+    Flag = "AutoGreen",
+    Callback = function(value)
+        autoShootEnabled = value
+        if autoShootEnabled then
+            if not visibleConn then
+                visibleConn = shootingElement:GetPropertyChangedSignal("Visible"):Connect(function()
+                    if autoShootEnabled and shootingElement.Visible == true then
+                        task.wait(0.25)
+                        Shoot:FireServer(shootPower)
+                    end
+                end)
+            end
+            Rayfield:Notify({
+                Title = "Auto Green",
+                Content = "Enabled",
+                Duration = 3,
+                Image = 4483362458,
+            })
+        else
+            if visibleConn then
+                visibleConn:Disconnect()
+                visibleConn = nil
+            end
+        end
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "Shot Timing",
+    Range = {50, 100},
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = 80,
+    Flag = "ShotPower",
+    Callback = function(value)
+        shootPower = value / 100
+    end
+})
+
+MainTab:CreateSection("Shot Timing Guide")
+MainTab:CreateLabel("80% = Mediocre")
+MainTab:CreateLabel("90% = Good")
+MainTab:CreateLabel("95% = Great")
+MainTab:CreateLabel("100% = Perfect")
+
+local KeybindTab = Window:CreateTab("Keybinds", "keyboard")
+
+KeybindTab:CreateKeybind({
+    Name = "Toggle Auto Green",
+    CurrentKeybind = "P",
+    HoldToInteract = false,
+    Flag = "ToggleKey",
+    Callback = function()
+        autoShootEnabled = not autoShootEnabled
+        if autoShootEnabled then
+            if not visibleConn then
+                visibleConn = shootingElement:GetPropertyChangedSignal("Visible"):Connect(function()
+                    if autoShootEnabled and shootingElement.Visible == true then
+                        task.wait(0.25)
+                        Shoot:FireServer(shootPower)
+                    end
+                end)
+            end
+        else
+            if visibleConn then
+                visibleConn:Disconnect()
+                visibleConn = nil
+            end
+        end
+        Rayfield:Notify({
+            Title = "Auto Green",
+            Content = autoShootEnabled and "Enabled" or "Disabled",
+            Duration = 2,
+            Image = 4483362458,
+        })
+    end
+})
+
+player.CharacterRemoving:Connect(function()
+    if visibleConn then
+        visibleConn:Disconnect()
+        visibleConn = nil
+    end
+end)
+
+Rayfield:LoadConfiguration()
